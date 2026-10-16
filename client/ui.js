@@ -206,6 +206,7 @@ function clipFor(cell) {
   const left = same(row, col - 1); const right = same(row, col + 1);
   const t = up ? 0 : G; const b = down ? 0 : G; const l = left ? 0 : G; const r = right ? 0 : G;
   const W = (n) => `calc(100% - ${n}px)`;
+  cell.gaps = `${t}px ${r}px ${b}px ${l}px`;
   const pts = [];
   if (up && left && diagDiff(row - 1, col - 1)) pts.push(`0 ${G}px`, `${G}px ${G}px`, `${G}px 0`);
   else pts.push(`${l}px ${t}px`);
@@ -311,6 +312,9 @@ function renderGame(g) {
     const d = document.createElement('button');
     const isStart = startSet.has(cell.index);
     d.style.clipPath = clipFor(cell);
+    const [gt, gr, gb, gl] = cell.gaps.split(' ');
+    d.style.setProperty('--gt', gt); d.style.setProperty('--gr', gr);
+    d.style.setProperty('--gb', gb); d.style.setProperty('--gl', gl);
     const box = boxes.get(cell.index);
     const nc = box.c1 - box.c0 + 1;
     const nr = box.r1 - box.r0 + 1;
