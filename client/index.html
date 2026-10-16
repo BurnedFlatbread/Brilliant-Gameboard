@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brilliant</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main id="app">
+  <section id="home" class="panel">
+    <h1 id="title" aria-label="Brilliant"></h1>
+    <label>Jouw naam <input id="playerName" maxlength="20" value=""></label>
+    <h2>Lobbies</h2>
+    <ul id="lobbyList" class="lobbies"></ul>
+    <h2>Lobby maken</h2>
+    <form id="createForm">
+      <input id="lobbyName" placeholder="Lobby naam" maxlength="30" required>
+      <input id="lobbyPw" type="password" placeholder="Lobby wachtwoord" maxlength="100" required>
+      <div id="levelPicker" class="levels"></div>
+      <label>Spelers
+        <select id="lobbyMax"><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      </label>
+      <button class="primary" type="submit">Maken</button>
+    </form>
+    <p id="homeMsg" class="msg bad"></p>
+  </section>
+
+  <section id="waiting" class="panel" hidden>
+    <h2 id="waitTitle"></h2>
+    <ul id="waitPlayers"></ul>
+    <button id="startBtn" class="primary" disabled hidden>Spel starten</button>
+    <p id="waitMsg" class="hint"></p>
+    <button id="leaveBtn">Verlaten</button>
+  </section>
+
+  <section id="game" hidden>
+    <header class="bar">
+      <div>Ronde <strong id="round">0</strong></div>
+      <div id="turn"></div>
+      <div id="order" class="hint"></div>
+    </header>
+    <div class="layout">
+      <div class="left">
+        <div id="dice" class="dice"></div>
+        <div id="palette" class="dice" hidden></div>
+        <div id="msg" class="msg" role="status"></div>
+        <div id="board" class="board"></div>
+        <div class="actions">
+          <button id="rollBtn" class="primary" hidden>Gooi de dobbelstenen</button>
+          <button id="readyBtn" class="primary" hidden>Startgetallen bevestigen</button>
+          <button id="passBtn" hidden>Geen geldige zet: overslaan</button>
+        </div>
+      </div>
+      <aside class="right">
+        <div class="card"><h2>Scores <small id="target"></small></h2><ul id="scores"></ul></div>
+        <div class="card"><h2>Gebieden</h2><ul id="areas" class="areas"></ul></div>
+        <div class="card"><h2>Logboek</h2><ul id="logs" class="logs"></ul></div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="over" class="overlay" hidden>
+    <div class="panel">
+      <h2>Einde spel</h2>
+      <p id="winner"></p>
+      <ul id="finalScores"></ul>
+      <button id="homeBtn" class="primary">Terug naar lobbies</button>
+    </div>
+  </div>
+</main>
+<script type="module" src="/client/ui.js"></script>
+</body>
+</html>
