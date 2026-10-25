@@ -6,8 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEVELS, getLevelConfig } from './game/config.js';
 import {
-  createGame, placeStartNumber, clearStartNumber, setReady, rollRound, submitPlacement,
-  resolveRound, allSubmitted, getLegalPlacements, currentRoller, targetScore,
+  createGame, placeStartNumber, clearStartNumber, autoPlaceStartNumbers, setReady, rollRound, submitPlacement,
+  resolveRound, allSubmitted, getLegalPlacements, targetScore,
 } from './game/engine.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -90,8 +90,6 @@ function viewFor(lobby, token) {
     phase: g.phase,
     round: g.round,
     dice: g.dice,
-    order: g.order,
-    roller: g.order.length ? currentRoller(g) : null,
     target: targetScore(g),
     scores: g.players.map((p, i) => ({ name: p.name, score: p.score, ready: p.ready, done: !!g.pending[i] })),
     cells: g.players[me].cells,
@@ -124,8 +122,9 @@ function applyAction(lobby, me, body) {
   switch (body.type) {
     case 'startNumber': r = placeStartNumber(g, me, { index: Number(body.index), number: Number(body.number) }); break;
     case 'clearStart': r = clearStartNumber(g, me, Number(body.index)); break;
+    case 'autoStart': r = autoPlaceStartNumbers(g, me); break;
     case 'ready': r = setReady(g, me); break;
-    case 'roll': r = rollRound(g, me); break;
+    case 'roll': r = rollRound(g); break;
     case 'place': r = submitPlacement(g, me, { index: Number(body.index), die: Number(body.die) }); break;
     case 'pass': r = submitPlacement(g, me, null); break;
     default: throw new HttpError(400, 'Onbekende actie.');
