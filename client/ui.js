@@ -266,9 +266,8 @@ function renderGame(g) {
 
   $('round').textContent = g.round;
   $('target').textContent = `(doel ${g.target})`;
-  $('order').textContent = g.order.length ? `Volgorde: ${g.order.map((i) => names[i]).join(' > ')}` : '';
   $('turn').textContent = setup ? 'Plaats je startgetallen'
-    : g.phase === 'rolling' ? `${names[g.roller]} gooit`
+    : g.phase === 'rolling' ? 'Gooi de dobbelstenen'
     : placing ? 'Plaats een getal' : 'Einde spel';
 
   if (animatedRound === null) animatedRound = g.round;
@@ -306,6 +305,9 @@ function renderGame(g) {
   // Board
   const legalSet = new Set(legal.filter((m) => m.die === selectedDie).map((m) => m.index));
   const done = new Set(g.completed);
+  for (const a of Object.values(layout.areas)) {
+    if (cfg.rewardAfterList <= 0 && g.claims[a.id].count >= a.rewards.length) done.add(a.id);
+  }
   $('board').innerHTML = '';
   const boxes = componentBoxes();
   for (const cell of layout.cells) {
@@ -338,14 +340,15 @@ function renderGame(g) {
     `${areaName(layout.areas[r.areaId])} voltooid door ${r.players.map((i) => names[i]).join(', ')} (+${r.points})`).join('; ');
   if (setup) say(myReady ? 'Wachten op de andere spelers...' : 'Kies een getal en klik op een vakje met diamant. Elk getal van 1-6 één keer.');
   else if (rolling) say('De dobbelstenen rollen...');
-  else if (g.phase === 'rolling') say(resolution || 'Wachten op de worp.');
+  else if (g.phase === 'rolling') say(resolution || 'Iedereen kan de dobbelstenen gooien.');
   else if (placing && g.pending) say('Wachten op de andere spelers...');
   else if (placing && legal.length === 0) say('Geen geldige plaatsing: sla deze ronde over.');
   else if (placing) say('Kies een dobbelsteen en daarna een gemarkeerd vakje.');
   else say(resolution);
 
+  $('autoBtn').hidden = !(setup && !myReady);
   $('readyBtn').hidden = !(setup && !myReady);
-  $('rollBtn').hidden = !(g.phase === 'rolling' && g.roller === me);
+  $('rollBtn').hidden = g.phase !== 'rolling';
   $('passBtn').hidden = !(placing && !g.pending && !rolling && legal.length === 0);
 
   $('scores').innerHTML = g.scores.map((s, i) => {
@@ -404,6 +407,7 @@ async function onCell(g, index, el) {
 $('startBtn').onclick = () => api(`/${session.lobbyId}/start`, 'POST', { token: session.token }).catch((e) => ($('waitMsg').textContent = e.message));
 $('rollBtn').onclick = () => act({ type: 'roll' }).catch((e) => say(e.message, true));
 $('passBtn').onclick = () => act({ type: 'pass' }).catch((e) => say(e.message, true));
+$('autoBtn').onclick = () => act({ type: 'autoStart' }).catch((e) => say(e.message, true));
 $('readyBtn').onclick = () => act({ type: 'ready' }).catch((e) => say(e.message, true));
 
 const FONT = {
