@@ -13,15 +13,6 @@ export function createRng(seed = 1) {
   };
 }
 
-function shuffle(list, rng) {
-  const a = [...list];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export function buildLayout(config) {
   const size = config.size;
   const cells = [];
@@ -118,8 +109,6 @@ export function createGame(config, names) {
     layout,
     players,
     phase: 'setup', // setup | rolling | placing | over
-    order: [],
-    rollerPos: 0,
     round: 0,
     dice: null,
     pending: {},
@@ -157,30 +146,38 @@ export function clearStartNumber(game, playerIdx, index) {
   return { ok: true };
 }
 
-export function setReady(game, playerIdx, { rng = Math.random } = {}) {
+export function autoPlaceStartNumbers(game, playerIdx, { rng = Math.random } = {}) {
+  if (game.phase !== 'setup') return { ok: false, reason: 'De voorbereiding is afgelopen.' };
+  const p = game.players[playerIdx];
+  if (p.ready) return { ok: false, reason: 'Al bevestigd.' };
+  const nums = [...game.config.startNumbers];
+  for (let i = nums.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  startIndexes(game).forEach((index, i) => { p.cells[index] = nums[i]; });
+  return { ok: true };
+}
+
+export function setReady(game, playerIdx) {
   if (game.phase !== 'setup') return { ok: false, reason: 'De voorbereiding is afgelopen.' };
   const p = game.players[playerIdx];
   const vals = startIndexes(game).map((i) => p.cells[i]);
   if (vals.some((v) => v === null)) return { ok: false, reason: 'Vul elk startvakje met een getal van 1-6.' };
   p.ready = true;
-  if (game.players.every((q) => q.ready)) startPlay(game, rng);
+  if (game.players.every((q) => q.ready)) startPlay(game);
   return { ok: true };
 }
 
 // Random roll order; the first entry rolls first, then the order repeats.
-export function startPlay(game, rng = Math.random) {
-  game.order = shuffle(game.players.map((_, i) => i), rng);
-  game.rollerPos = 0;
+export function startPlay(game) {
   game.round = 0;
   game.phase = 'rolling';
   game.players.forEach((p, i) => { p.completed = completedAreas(game, i); });
 }
 
-export const currentRoller = (game) => game.order[game.rollerPos % game.order.length];
-
-export function rollRound(game, playerIdx, { rng = Math.random, dice = null } = {}) {
+export function rollRound(game, { rng = Math.random, dice = null } = {}) {
   if (game.phase !== 'rolling') return { ok: false, reason: 'Er wordt niet op een worp gewacht.' };
-  if (currentRoller(game) !== playerIdx) return { ok: false, reason: 'Jij bent niet aan de beurt om te gooien.' };
   game.round += 1;
   game.dice = dice ? [...dice] : rollDice(game.config.dice, rng);
   game.pending = {};
@@ -292,7 +289,6 @@ export function resolveRound(game) {
   if (end.over) {
     game.phase = 'over';
   } else {
-    game.rollerPos += 1;
     game.phase = 'rolling';
   }
   return results;
